@@ -118,6 +118,13 @@ or the `access_token` cookie set by the registration and login endpoints. Swagge
 | `GET`    | `/api/post`                     | Required       | Get the authenticated user's posts |
 | `GET`    | `/api/post/:id`                 | Required       | Get a post                         |
 | `DELETE` | `/api/post/:id/delete`          | Required       | Delete a post and its images       |
+| `GET`    | `/api/chat`                     | Required       | List the current user's chats      |
+| `POST`   | `/api/chat`                     | Required       | Create or access a direct chat     |
+| `POST`   | `/api/chat/group`               | Required       | Create a group chat                |
+| `PATCH`  | `/api/chat/:chatId/group`       | Required       | Rename a group chat                |
+| `PUT`    | `/api/chat/:chatId/members/:userId` | Required   | Add a group member                 |
+| `DELETE` | `/api/chat/:chatId/members/:userId` | Required | Remove a member or leave a group   |
+| `GET`    | `/api/chat/:chatId/messages`    | Required       | Get paginated message history      |
 
 The implementation currently uses `GET` with a JSON body for password changes and `GET` for follow/unfollow actions. Clients must match these methods.
 
@@ -156,15 +163,38 @@ The repository contains Docker and Compose configuration, but the current `Docke
 
 ## Socket.IO Events
 
-The server currently handles:
+Connect with the login JWT in the Socket.IO authentication object:
 
-- `setup`
-- `join chat`
-- `typing`
-- `stop typing`
-- `new message`
+```ts
+const socket = io(API_URL, {
+  auth: { token },
+});
+```
 
-It emits `connected`, `typing`, `stop typing`, and `message received`.
+Client events:
+
+- `chat:join` with `chatId`
+- `chat:leave` with `chatId`
+- `message:send` with `{ chatId, text }`
+- `typing:start` with `chatId`
+- `typing:stop` with `chatId`
+- `messages:mark-read` with `chatId`
+
+Server events:
+
+- `connected` with `{ userId }`
+- `message:received` with the persisted message
+- `typing:changed` with `{ chatId, userId, isTyping }`
+- `messages:read` with `{ chatId, userId, readAt }`
+- `chat:error` with `{ message }`
+
+The legacy event names `join chat`, `leave chat`, `new message`, `typing`, `stop typing`, and `message received` remain available for compatibility. Socket actions verify JWT authentication and chat membership before joining rooms or modifying messages.
+
+Message history accepts `limit` (maximum `100`) and an optional ISO date cursor:
+
+```http
+GET /api/chat/:chatId/messages?limit=50&before=2026-06-25T10:00:00.000Z
+```
 
 ## License
 

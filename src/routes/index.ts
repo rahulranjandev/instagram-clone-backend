@@ -6,6 +6,7 @@ const router = Router();
 import authRoutes from './auth.routes';
 import userRoutes from './user.routes';
 import postRoutes from './post.routes';
+import chatRoutes from './chat.routes';
 
 const status = (req: Request, res: Response, next: NextFunction) => {
   res.json({
@@ -62,5 +63,11 @@ router.use('/api/user', userRoutes);
  * @middleware upload
  */
 router.use('/api/post', postRoutes);
+
+/**
+ * @description Chat Routes - /api/chat - Private Routes
+ * @middleware auth
+ */
+router.use('/api/chat', chatRoutes);
 
 export default router;

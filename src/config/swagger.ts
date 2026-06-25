@@ -16,6 +16,10 @@ const swaggerSpec = swaggerJsdoc({
         url: `http://localhost:${port}`,
         description: 'Local development server',
       },
+      {
+        url: 'https://instagram-clone-backend-main.onrender.com',
+        description: 'Production server',
+      },
     ],
     tags: [
       { name: 'System', description: 'Service status endpoints' },

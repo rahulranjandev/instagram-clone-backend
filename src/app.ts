@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import { connectDB } from '@utils/connectDB';
 import { PORT, NODE_ENV } from '@config';
 import swaggerSpec from '@/config/swagger';
+import { initializeChatSocket } from '@/socket/chatSocket';
 
 import router from '@routes/index';
 
@@ -55,36 +56,7 @@ const io = new Server(httpServer, {
   },
 });
 
-io.on('connection', (socket) => {
-  console.log('user Connected');
-
-  socket.on('setup', (userData) => {
-    socket.join(userData.id);
-    console.log(userData.id);
-    socket.emit('connected');
-  });
-
-  socket.on('join chat', (room) => {
-    socket.join(room);
-    console.log('User Joined to Room: ' + room);
-  });
-
-  socket.on('typing', (room) => socket.in(room).emit('typing'));
-
-  socket.on('stop typing', (room) => socket.in(room).emit('stop typing'));
-
-  socket.on('new message', (newMessageRecieved) => {
-    const chat = newMessageRecieved.chat;
-
-    if (!chat.users) return console.log('Chat.users not defined!');
-
-    chat.users.forEach((user: { _id: string | string[] }) => {
-      if (user._id == newMessageRecieved.sender._id) return;
-
-      socket.in(user._id).emit('message received', newMessageRecieved);
-    });
-  });
-});
+initializeChatSocket(io);
 
 // UnKnown Routes
 app.all('/{*path}', (req: Request, res: Response, next: NextFunction) => {

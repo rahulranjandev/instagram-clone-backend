@@ -1,14 +1,16 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 interface IChat {
-  _id?: string;
-  user?: string;
+  _id?: Types.ObjectId;
+  user?: Types.ObjectId;
   chatName: string;
-  isGroupChat?: Date;
-  latestMessage?: string;
-  groupAdmin?: string;
-  members?: string[];
-  date?: Date;
+  isGroupChat: boolean;
+  latestMessage?: Types.ObjectId;
+  groupAdmin?: Types.ObjectId;
+  members: Types.ObjectId[];
+  directChatKey?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const chatSchema = new mongoose.Schema<IChat>(
@@ -21,6 +23,7 @@ const chatSchema = new mongoose.Schema<IChat>(
       type: String,
       trim: true,
       required: [true, 'Chat name is required'],
+      maxlength: [100, 'Chat name cannot exceed 100 characters'],
     },
     isGroupChat: {
       type: Boolean,
@@ -38,13 +41,23 @@ const chatSchema = new mongoose.Schema<IChat>(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required: true,
       },
     ],
+    directChatKey: {
+      type: String,
+      unique: true,
+      sparse: true,
+      select: false,
+    },
   },
   {
     timestamps: true,
+    versionKey: false,
   }
 );
+
+chatSchema.index({ members: 1, updatedAt: -1 });
 
 const Chat = mongoose.model<IChat>('Chat', chatSchema);
 
