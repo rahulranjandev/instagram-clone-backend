@@ -1,36 +1,35 @@
 # STAGE: Builder
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /builder
 
-COPY  package.json    ./
-RUN npm i
+# Copy both files so npm ci can use the lockfile for a reproducible install
+COPY package.json package-lock.json ./
+RUN npm ci
 
-COPY . /builder
+# Copy source after deps are installed (better layer caching)
+COPY . .
 
 RUN npm run build
 
 
-# STAGE: Prod Deploy Ready Image
+# STAGE: Production
+FROM node:22-alpine
 
-FROM node:18-alpine
+# node:22-alpine already ships Node — no need to apk add nodejs
 
-RUN apk add --update nodejs
+ENV NODE_ENV=production
 
-# RUN addgroup -S node && adduser -S node -G node
 USER node
 
-# RUN mkdir /home/app
 WORKDIR /home/app
 
+COPY --chown=node:node package.json package-lock.json ./
 
-COPY  --chown=node:node package.json package-lock.json   ./
-
-RUN npm ci --only=production
+# --omit=dev replaces the deprecated --only=production flag (npm v9+)
+RUN npm ci --omit=dev
 
 COPY --from=builder --chown=node:node /builder/dist ./dist
 
-
-EXPOSE 3333 80
+EXPOSE 3333
 CMD ["node", "dist/app.js"]
-
