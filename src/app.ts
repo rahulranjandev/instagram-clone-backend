@@ -4,8 +4,10 @@ import { Server } from 'socket.io';
 import morgan from 'morgan';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
 import { connectDB } from '@utils/connectDB';
 import { PORT, NODE_ENV } from '@config';
+import swaggerSpec from '@/config/swagger';
 
 import router from '@routes/index';
 
@@ -26,6 +28,21 @@ if (NODE_ENV === 'development') app.use(morgan('dev'));
 
 // Cors
 app.use(cors());
+
+// API documentation
+app.get('/api-docs.json', (_req: Request, res: Response) => {
+  res.json(swaggerSpec);
+});
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  })
+);
 
 // Main Routes
 app.use('/', router);
@@ -70,7 +87,7 @@ io.on('connection', (socket) => {
 });
 
 // UnKnown Routes
-app.all('*', (req: Request, res: Response, next: NextFunction) => {
+app.all('/{*path}', (req: Request, res: Response, next: NextFunction) => {
   const err = new Error(`Route ${req.originalUrl} not found`) as any;
   err.statusCode = 404;
   next(err);

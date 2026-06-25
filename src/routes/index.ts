@@ -14,6 +14,28 @@ const status = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
+/**
+ * @openapi
+ * /:
+ *   get:
+ *     tags: [System]
+ *     summary: Check API status
+ *     operationId: getApiStatus
+ *     responses:
+ *       200:
+ *         description: The API is running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Server is running
+ */
 router.route('/').get(status);
 
 /**

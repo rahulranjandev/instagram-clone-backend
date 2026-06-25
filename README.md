@@ -1,97 +1,175 @@
-# Instagram-Clone-Backend
+# Instagram Clone Backend
 
-Welcome to Instagram-Clone-Backend, a dynamic and interactive social media app built with Node.js, TypeScript, Express, and MongoDB. This project empowers users to create accounts, share media, and connect by following each other. Designed using the robust MVC pattern, this app serves as an excellent learning tool for anyone interested in mastering the development of social media applications. Please note that this is a work in progress and is not intended for production use.
+A TypeScript REST API for an Instagram-style social application. It provides JWT authentication, user follow relationships, image posts backed by Azure Blob Storage, password-reset email delivery through Mailgun, Socket.IO events, and interactive OpenAPI documentation.
 
-## 🚀 Getting Started
+> This project is under development and is not production-ready.
 
-Ready to dive in? Follow these steps to get the project up and running on your local machine for development and testing purposes. For live system deployment, check out the deployment section.
+## Features
 
-## 🌟 Features
+- User registration, login, logout, and password management
+- JWT authentication through a bearer token or `access_token` cookie
+- User profiles, followers, following, follow, and unfollow operations
+- Multi-image post creation using multipart uploads
+- Azure Blob Storage image upload and signed download URLs
+- Socket.IO rooms, typing indicators, and message events
+- Zod request validation
+- Swagger UI and OpenAPI JSON documentation
 
-This project includes the following features to provide a comprehensive social media experience:
+## Technology
 
-- **User Authentication**: Securely create accounts, log in, and manage user sessions.
-- **Post Media**: Upload and share photos and videos with your followers.
-- **Follow Users**: Follow other users to see their posts in your feed.
-- **Feeds**: View a curated feed of posts from the users you follow.
-- **Chat Function**: Real-time messaging with other users to stay connected.
-- **Notifications**: Stay updated with notifications for likes, comments, and new followers (coming soon).
+- Node.js, TypeScript, Express 5
+- MongoDB and Mongoose
+- Socket.IO
+- Azure Blob Storage
+- Mailgun
+- Zod
+- Swagger/OpenAPI
+- SWC
 
-### Prerequisites
+## Prerequisites
 
-Ensure you have the following software installed:
+- Node.js 22 or later
+- npm
+- MongoDB database
+- Azure Storage account
+- Mailgun account
 
-- **Node.js** - Download and install from [Node.js](https://nodejs.org/en/).
-- **Postman** - Download and install from [Postman](https://www.getpostman.com/). (Optional)
-- **Docker** - Download and install from [Docker](https://www.docker.com/). (Optional)
+## Local Setup
 
-### Installation Steps
+1. Clone the repository:
 
-Here’s how you can set up your development environment in just a few simple steps:
+   ```sh
+   git clone https://github.com/rahulranjan937/instagram-clone-backend.git
+   cd instagram-clone-backend
+   ```
 
-1. **Clone the repository**:
+2. Install dependencies:
 
-    ```sh
-    git clone https://github.com/rahulranjan937/instagram-clone-backend.git
-    cd Simple-Social-Media-App
-    ```
+   ```sh
+   npm install
+   ```
 
-2. **Install dependencies**:
+3. Create the environment file:
 
-    ```sh
-    npm install
-    ```
+   ```sh
+   cp .env.example .env
+   ```
 
-3. **Set up environment variables**:
+4. Configure `.env`:
 
-    ```sh
-    cp .env.example .env
-    ```
+   ```dotenv
+   PORT=3333
+   NODE_ENV=development
+   HOST=http://localhost:3333
 
-    Then, open the `.env` file and replace the placeholder values with your own.
+   MONGODB_URI=mongodb://localhost:27017/instagram-clone
+   JWT_SECRET=replace-with-a-secure-secret
 
-4. **Start the server in development mode**:
+   AZURE_STORAGE_CONNECTION_STRING=replace-with-your-connection-string
 
-    ```sh
-    npm run dev
-    ```
+   MAILGUN_API_KEY=replace-with-your-api-key
+   MAILGUN_DOMAIN=replace-with-your-mailgun-domain
+   FROM_EMAIL=Instagram Clone <noreply@example.com>
+   ```
 
-5. **Start the server in production mode**:
+5. Start the development server:
 
-    Before starting the server in production mode, you need to build the TypeScript files:
+   ```sh
+   npm run dev
+   ```
 
-    ```sh
-    npm run build
-    ```
+The API runs at `http://localhost:3333` unless `PORT` is changed.
 
-    Then, start the server:
+## API Documentation
 
-    ```sh
-    npm start
-    ```
+After starting the server:
 
-### Running with Docker
+- Swagger UI: [http://localhost:3333/api-docs/](http://localhost:3333/api-docs/)
+- OpenAPI JSON: [http://localhost:3333/api-docs.json](http://localhost:3333/api-docs.json)
+- Status endpoint: [http://localhost:3333/](http://localhost:3333/)
 
-If you prefer using Docker, follow these steps to get started:
+Swagger documents request bodies, responses, multipart uploads, path parameters, and all protected endpoints.
 
-1. **Build the Docker image**:
+For protected requests, use either:
 
-    ```sh
-    docker build -t instagram-clone-backend .
-    ```
+```http
+Authorization: Bearer <JWT>
+```
 
-2. **Run the Docker container**:
+or the `access_token` cookie set by the registration and login endpoints. Swagger UI supports bearer authorization through its **Authorize** button.
 
-    ```sh
-    docker run -d -p 3000:3000 --env-file .env instagram-clone-backend
-    ```
+## API Overview
 
-## 📚 API Documentation
+| Method   | Endpoint                        | Authentication | Description                        |
+| -------- | ------------------------------- | -------------- | ---------------------------------- |
+| `GET`    | `/`                             | Public         | Check server status                |
+| `POST`   | `/api/auth/register`            | Public         | Register a user                    |
+| `POST`   | `/api/auth/login`               | Public         | Log in                             |
+| `POST`   | `/api/auth/forgotpassword`      | Public         | Request a password-reset email     |
+| `POST`   | `/api/auth/resetpassword`       | Public         | Reset a password with a token      |
+| `GET`    | `/api/auth/changepassword`      | Required       | Change the current password        |
+| `POST`   | `/api/auth/logout`              | Required       | Log out                            |
+| `GET`    | `/api/user/:username`           | Required       | Get a user profile                 |
+| `GET`    | `/api/user/:username/followers` | Required       | Get a user's followers             |
+| `GET`    | `/api/user/:username/following` | Required       | Get users followed by a user       |
+| `GET`    | `/api/user/:username/follow`    | Required       | Follow a user                      |
+| `GET`    | `/api/user/:username/unfollow`  | Required       | Unfollow a user                    |
+| `POST`   | `/api/post/create`              | Required       | Create a post with images          |
+| `GET`    | `/api/post`                     | Required       | Get the authenticated user's posts |
+| `GET`    | `/api/post/:id`                 | Required       | Get a post                         |
+| `DELETE` | `/api/post/:id/delete`          | Required       | Delete a post and its images       |
 
-Detailed documentation for the API endpoints is available in the `API_Documentation.md` file. This will guide you through using the various features and endpoints of the app.
+The implementation currently uses `GET` with a JSON body for password changes and `GET` for follow/unfollow actions. Clients must match these methods.
 
-## 👥 Authors
+## Post Uploads
 
-Crafted with care by [Rahul Ranjan](https://github.com/rahulranjan937).
+`POST /api/post/create` accepts `multipart/form-data`:
 
-This project has been modified and adapted to create an engaging Instagram-Clone-Backend experience. Happy coding!
+- `caption`: post caption
+- `images`: one or more image files
+
+The upload middleware accepts files in memory and stores them in the Azure Blob Storage `images` container.
+
+## Available Commands
+
+```sh
+npm run dev       # Start the development server with automatic restarts
+npm run build     # Compile TypeScript sources into dist/
+npm start         # Run the compiled application
+npm run lint      # Run ESLint
+npm run lint:fix  # Run ESLint with automatic fixes
+npx tsc --noEmit  # Run a full TypeScript type check
+```
+
+## Production Build
+
+```sh
+npm run build
+npm start
+```
+
+The build command clears and regenerates `dist/` using SWC.
+
+## Docker
+
+The repository contains Docker and Compose configuration, but the current `Dockerfile` uses Node.js 18. The installed Azure Storage dependency requires Node.js 22 or later, so update the Docker base images before using the container workflow. The Compose configuration maps the API to port `3000` and Nginx to port `80`.
+
+## Socket.IO Events
+
+The server currently handles:
+
+- `setup`
+- `join chat`
+- `typing`
+- `stop typing`
+- `new message`
+
+It emits `connected`, `typing`, `stop typing`, and `message received`.
+
+## License
+
+Licensed under the terms in [LICENSE.md](LICENSE.md).
+
+## Author
+
+[Rahul Ranjan](https://github.com/rahulranjandev)

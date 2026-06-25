@@ -6,9 +6,11 @@
 
     "module": "commonjs",
     "moduleResolution": "node",
+    "rootDir": "./src",
     "sourceMap": true,
 
     "outDir": "./dist",
+    "types": ["node"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
@@ -16,6 +18,7 @@
 
     "strictPropertyInitialization": false,
     "baseUrl": "./src",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["*"],
       "@config": ["config"],
